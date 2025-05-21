@@ -1,4 +1,4 @@
-module go-core-fiber-utils
+module github.com/pixlware/go-core-fiber-utils
 
 go 1.24.3
 
