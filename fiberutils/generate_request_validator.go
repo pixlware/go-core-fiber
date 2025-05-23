@@ -1,4 +1,4 @@
-package fiber_utils
+package fiberutils
 
 import (
 	"github.com/go-playground/validator/v10"
@@ -14,12 +14,14 @@ type ValidationError struct {
 	Message string `json:"message"`
 }
 
-func ValidateRequest[T any]() fiber.Handler {
+const REQ_BODY_KEY = "reqBody"
+
+func GenerateRequestValidator[T any](errorCode string) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		var body T
 
 		if err := c.BodyParser(&body); err != nil {
-			responseBody := NewErrorResponseBody(fiber.StatusBadRequest, "Invalid request body", err, "")
+			responseBody := NewErrorResponseBody(fiber.StatusBadRequest, "Invalid request body", err, errorCode)
 			return c.Status(fiber.StatusBadRequest).JSON(responseBody)
 		}
 
@@ -36,17 +38,17 @@ func ValidateRequest[T any]() fiber.Handler {
 				}
 			} else {
 				// Some other kind of error
-				responseBody := NewErrorResponseBody(fiber.StatusBadRequest, "Validation error", err, "")
+				responseBody := NewErrorResponseBody(fiber.StatusBadRequest, "Validation error", err, errorCode)
 				return c.Status(fiber.StatusBadRequest).JSON(responseBody)
 			}
 
 			// Return array of validation errors
-			responseBody := NewErrorResponseBody(fiber.StatusBadRequest, "Validation failed", validationErrors, "")
+			responseBody := NewErrorResponseBody(fiber.StatusBadRequest, "Validation failed", validationErrors, errorCode)
 			return c.Status(fiber.StatusBadRequest).JSON(responseBody)
 		}
 
 		// Store validated struct
-		c.Locals("reqBody", body)
+		c.Locals(REQ_BODY_KEY, body)
 		return c.Next()
 	}
 }
